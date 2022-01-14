@@ -1,0 +1,8 @@
+/node_modules/
+__pycache__
+.history
+.hypothesis/
+build/
+reports/
+
+.DS_Store

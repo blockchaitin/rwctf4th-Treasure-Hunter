@@ -1,0 +1,24 @@
+{
+  "name": "rwctf4th-treasure-hunter",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "prettier": "prettier --write 'contracts/**/*.sol'",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chaitinblockchain/rwctf4th-Treasure-Hunter.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/chaitinblockchain/rwctf4th-Treasure-Hunter/issues"
+  },
+  "homepage": "https://github.com/chaitinblockchain/rwctf4th-Treasure-Hunter#readme",
+  "devDependencies": {
+    "prettier": "^2.5.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.19"
+  }
+}
