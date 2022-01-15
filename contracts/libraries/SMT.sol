@@ -1,4 +1,4 @@
-pragma solidity ^0.8.6;
+pragma solidity >=0.8.0 <0.9.0;
 
 uint256 constant SIZE = 255;
 uint256 constant BUFFER_LENGTH = 1;
@@ -36,20 +36,19 @@ library SMT {
         }
     }
 
-    function black_white_list_verify(
+    function smt_verify_by_mode(
         bytes32[] memory _proofs,
         uint160 _bits,
         address _target,
         bytes32 _expectedRoot,
-        bool is_white_list
+        bool is_white_list_mode
     ) internal pure returns (bool) {
-        if (is_white_list) {
-            smt_leaf memory leaf = smt_leaf({key: _target, value: 1});
-            return smt_verify(_proofs, _bits, leaf, _expectedRoot);
-        } else {
-            smt_leaf memory leaf = smt_leaf({key: _target, value: 0});
-            return smt_verify(_proofs, _bits, leaf, _expectedRoot);
+        smt_leaf memory leaf = smt_leaf({key: _target, value: 0});
+        if (is_white_list_mode) {
+            leaf.value = 1;
         }
+
+        return smt_verify(_proofs, _bits, leaf, _expectedRoot);
     }
 
     function smt_verify(
