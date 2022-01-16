@@ -95,15 +95,15 @@ library SMT {
         for (uint256 d = 0; d < DEPTH; d++) {
             if ((_index & 1) == 1) {
                 if ((_bits & 1) == 1) {
-                    rootHash = smtMerge(_proofs[d], rootHash);
+                    rootHash = merge(_proofs[d], rootHash);
                 } else {
-                    rootHash = smtMerge(0, rootHash);
+                    rootHash = merge(0, rootHash);
                 }
             } else {
                 if ((_bits & 1) == 1) {
-                    rootHash = smtMerge(rootHash, _proofs[d]);
+                    rootHash = merge(rootHash, _proofs[d]);
                 } else {
-                    rootHash = smtMerge(rootHash, 0);
+                    rootHash = merge(rootHash, 0);
                 }
             }
 
