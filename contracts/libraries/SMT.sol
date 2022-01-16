@@ -4,16 +4,21 @@ uint256 constant SIZE = 255;
 uint256 constant DEPTH = 20;
 
 library SMT {
-    struct smtLeaf {
+    struct Leaf {
         address key;
         uint8 value;
     }
 
-    function smtInit() internal pure returns (bytes32) {
+    enum Mode {
+        BlackList,
+        WhiteList
+    }
+
+    function init() internal pure returns (bytes32) {
         return 0;
     }
 
-    function calcLeaf(smtLeaf memory a) internal pure returns (bytes32) {
+    function calcLeaf(Leaf memory a) internal pure returns (bytes32) {
         if (a.value == 0) {
             return 0;
         } else {
@@ -21,11 +26,7 @@ library SMT {
         }
     }
 
-    function smtMerge(bytes32 l, bytes32 r)
-        internal
-        pure
-        returns (bytes32)
-    {
+    function merge(bytes32 l, bytes32 r) internal pure returns (bytes32) {
         if (l == 0) {
             return r;
         } else if (r == 0) {
@@ -35,51 +36,47 @@ library SMT {
         }
     }
 
-    function smtVerifyByMode(
+    function verifyByMode(
         bytes32[] memory _proofs,
         uint160 _bits,
         address _target,
         bytes32 _expectedRoot,
-        bool _isWhiteListMode
+        Mode _mode
     ) internal pure returns (bool) {
-        smtLeaf memory leaf = smtLeaf({key: _target, value: 0});
-        if (_isWhiteListMode) {
-            leaf.value = 1;
-        }
-
-        return smtVerify(_proofs, _bits, leaf, _expectedRoot);
+        Leaf memory leaf = Leaf({key: _target, value: uint8(_mode)});
+        return verify(_proofs, _bits, leaf, _expectedRoot);
     }
 
-    function smtVerify(
+    function verify(
         bytes32[] memory _proofs,
         uint160 _bits,
-        smtLeaf memory _leaf,
+        Leaf memory _leaf,
         bytes32 _expectedRoot
     ) internal pure returns (bool) {
-        return (smtCalculateRoot(_proofs, _bits, _leaf) == _expectedRoot);
+        return (calcRoot(_proofs, _bits, _leaf) == _expectedRoot);
     }
 
-    function smtUpdate(
+    function update(
         bytes32[] memory _proofs,
         uint160 _bits,
-        smtLeaf memory _nextLeaf,
-        smtLeaf memory _prevLeaf,
+        Leaf memory _nextLeaf,
+        Leaf memory _prevLeaf,
         bytes32 _prevRoot
     ) internal pure returns (bytes32) {
         require(
-            smtVerify(_proofs, _bits, _prevLeaf, _prevRoot),
+            verify(_proofs, _bits, _prevLeaf, _prevRoot),
             "update proof not valid"
         );
-        return smtCalculateRoot(_proofs, _bits, _nextLeaf);
+        return calcRoot(_proofs, _bits, _nextLeaf);
     }
 
-    function smtCalculateRoot(
+    function calcRoot(
         bytes32[] memory _proofs,
         uint160 _bits,
-        smtLeaf memory _leaf
+        Leaf memory _leaf
     ) internal pure returns (bytes32) {
         uint160 _index = uint160(_leaf.key);
-        bytes32 root_hash = calcLeaf(_leaf);
+        bytes32 rootHash = calcLeaf(_leaf);
 
         require(_index < SIZE, "_index bigger than tree size");
         require(_proofs.length <= DEPTH, "Invalid _proofs length");
@@ -87,21 +84,21 @@ library SMT {
         for (uint256 d = 0; d < DEPTH; d++) {
             if ((_index & 1) == 1) {
                 if ((_bits & 1) == 1) {
-                    root_hash = smtMerge(_proofs[d], root_hash);
+                    rootHash = smtMerge(_proofs[d], rootHash);
                 } else {
-                    root_hash = smtMerge(0, root_hash);
+                    rootHash = smtMerge(0, rootHash);
                 }
             } else {
                 if ((_bits & 1) == 1) {
-                    root_hash = smtMerge(root_hash, _proofs[d]);
+                    rootHash = smtMerge(rootHash, _proofs[d]);
                 } else {
-                    root_hash = smtMerge(root_hash, 0);
+                    rootHash = smtMerge(rootHash, 0);
                 }
             }
 
             _bits = _bits >> 1;
             _index = _index >> 1;
         }
-        return root_hash;
+        return rootHash;
     }
 }
