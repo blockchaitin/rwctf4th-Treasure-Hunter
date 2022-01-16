@@ -4,16 +4,16 @@ uint256 constant SIZE = 255;
 uint256 constant DEPTH = 20;
 
 library SMT {
-    struct smt_leaf {
+    struct smtLeaf {
         address key;
         uint8 value;
     }
 
-    function smt_init() internal pure returns (bytes32) {
+    function smtInit() internal pure returns (bytes32) {
         return 0;
     }
 
-    function calc_leaf(smt_leaf memory a) internal pure returns (bytes32) {
+    function calcLeaf(smtLeaf memory a) internal pure returns (bytes32) {
         if (a.value == 0) {
             return 0;
         } else {
@@ -21,65 +21,65 @@ library SMT {
         }
     }
 
-    function smt_merge(bytes32 lhs, bytes32 rhs)
+    function smtMerge(bytes32 l, bytes32 r)
         internal
         pure
         returns (bytes32)
     {
-        if (lhs == 0) {
-            return rhs;
-        } else if (rhs == 0) {
-            return lhs;
+        if (l == 0) {
+            return r;
+        } else if (r == 0) {
+            return l;
         } else {
-            return keccak256(abi.encode(lhs, rhs));
+            return keccak256(abi.encode(l, r));
         }
     }
 
-    function smt_verify_by_mode(
+    function smtVerifyByMode(
         bytes32[] memory _proofs,
         uint160 _bits,
         address _target,
         bytes32 _expectedRoot,
-        bool is_white_list_mode
+        bool _isWhiteListMode
     ) internal pure returns (bool) {
-        smt_leaf memory leaf = smt_leaf({key: _target, value: 0});
-        if (is_white_list_mode) {
+        smtLeaf memory leaf = smtLeaf({key: _target, value: 0});
+        if (_isWhiteListMode) {
             leaf.value = 1;
         }
 
-        return smt_verify(_proofs, _bits, leaf, _expectedRoot);
+        return smtVerify(_proofs, _bits, leaf, _expectedRoot);
     }
 
-    function smt_verify(
+    function smtVerify(
         bytes32[] memory _proofs,
         uint160 _bits,
-        smt_leaf memory _leaf,
+        smtLeaf memory _leaf,
         bytes32 _expectedRoot
     ) internal pure returns (bool) {
-        return (smt_calculate_root(_proofs, _bits, _leaf) == _expectedRoot);
+        return (smtCalculateRoot(_proofs, _bits, _leaf) == _expectedRoot);
     }
 
-    function smt_update(
+    function smtUpdate(
         bytes32[] memory _proofs,
         uint160 _bits,
-        smt_leaf memory _nextleaf,
-        smt_leaf memory _prevleaf,
-        bytes32 _prevroot
+        smtLeaf memory _nextLeaf,
+        smtLeaf memory _prevLeaf,
+        bytes32 _prevRoot
     ) internal pure returns (bytes32) {
         require(
-            smt_verify(_proofs, _bits, _prevleaf, _prevroot),
+            smtVerify(_proofs, _bits, _prevLeaf, _prevRoot),
             "update proof not valid"
         );
-        return smt_calculate_root(_proofs, _bits, _nextleaf);
+        return smtCalculateRoot(_proofs, _bits, _nextLeaf);
     }
 
-    function smt_calculate_root(
+    function smtCalculateRoot(
         bytes32[] memory _proofs,
         uint160 _bits,
-        smt_leaf memory _leaf
+        smtLeaf memory _leaf
     ) internal pure returns (bytes32) {
         uint160 _index = uint160(_leaf.key);
-        bytes32 root_hash = calc_leaf(_leaf);
+        bytes32 root_hash = calcLeaf(_leaf);
 
         require(_index < SIZE, "_index bigger than tree size");
         require(_proofs.length <= DEPTH, "Invalid _proofs length");
@@ -87,15 +87,15 @@ library SMT {
         for (uint256 d = 0; d < DEPTH; d++) {
             if ((_index & 1) == 1) {
                 if ((_bits & 1) == 1) {
-                    root_hash = smt_merge(_proofs[d], root_hash);
+                    root_hash = smtMerge(_proofs[d], root_hash);
                 } else {
-                    root_hash = smt_merge(0, root_hash);
+                    root_hash = smtMerge(0, root_hash);
                 }
             } else {
                 if ((_bits & 1) == 1) {
-                    root_hash = smt_merge(root_hash, _proofs[d]);
+                    root_hash = smtMerge(root_hash, _proofs[d]);
                 } else {
-                    root_hash = smt_merge(root_hash, 0);
+                    root_hash = smtMerge(root_hash, 0);
                 }
             }
 
