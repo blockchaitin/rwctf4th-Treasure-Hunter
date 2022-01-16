@@ -56,6 +56,17 @@ library SMT {
         return (calcRoot(_proofs, _bits, _leaf) == _expectedRoot);
     }
 
+    function insert(
+        bytes32[] memory _proofs,
+        uint160 _bits,
+        address _target,
+        bytes32 _prevRoot
+    ) internal pure returns (bytes32) {
+        Leaf memory nextLeaf = Leaf({key: _target, value: 1});
+        Leaf memory prevLeaf = Leaf({key: _target, value: 0});
+        return update(_proofs, _bits, nextLeaf, prevLeaf, _prevRoot);
+    }
+
     function update(
         bytes32[] memory _proofs,
         uint160 _bits,
