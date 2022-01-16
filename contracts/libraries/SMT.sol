@@ -1,7 +1,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
-uint256 constant SIZE = 255;
 uint256 constant DEPTH = 20;
+uint256 constant SIZE = 2**DEPTH-1;
 
 library SMT {
     struct Leaf {
