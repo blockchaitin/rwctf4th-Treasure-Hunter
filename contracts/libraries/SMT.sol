@@ -113,89 +113,109 @@ library SMT {
         }
         return rootHash;
     }
-    function checkGroupSorted(Leaf[] memory _leafs)internal pure returns (bool){
+
+    function checkGroupSorted(Leaf[] memory _leafs)
+        internal
+        pure
+        returns (bool)
+    {
         require(_leafs.length >= 1);
         uint160 temp = 0;
-        for(uint i = 0;i < _leafs.length;i++){
-            if(temp >= uint160(_leafs[i].key)){
+        for (uint256 i = 0; i < _leafs.length; i++) {
+            if (temp >= uint160(_leafs[i].key)) {
                 return false;
             }
             temp = uint160(_leafs[i].key);
         }
         return true;
     }
-    function calcRoot2(
-        bytes32[] memory _proofs,
-        Leaf[] memory _leafs
-    )internal pure returns (bytes32){
+
+    function calcRoot2(bytes32[] memory _proofs, Leaf[] memory _leafs)
+        internal
+        pure
+        returns (bytes32)
+    {
         require(checkGroupSorted(_leafs));
         uint160[] memory stack_keys = new uint160[](SMT_STACK_SIZE);
         bytes32[] memory stack_values = new bytes32[](SMT_STACK_SIZE);
-        uint proof_index = 0;
-        uint leave_index = 0;
-        uint stack_top = 0;
+        uint256 proof_index = 0;
+        uint256 leave_index = 0;
+        uint256 stack_top = 0;
 
-
-        while(proof_index < _proofs.length){
-            if(uint256(_proofs[proof_index]) == 0x4c){
+        while (proof_index < _proofs.length) {
+            if (uint256(_proofs[proof_index]) == 0x4c) {
                 proof_index++;
-                if(stack_top >= SMT_STACK_SIZE){
+                if (stack_top >= SMT_STACK_SIZE) {
                     revert();
                 }
-                if(leave_index >= _leafs.length){
+                if (leave_index >= _leafs.length) {
                     revert();
                 }
                 stack_keys[stack_top] = uint160(_leafs[leave_index].key);
                 stack_values[stack_top] = calcLeaf(_leafs[leave_index]);
                 stack_top++;
                 leave_index++;
-            }else if(uint256(_proofs[proof_index]) == 0x50){
+            } else if (uint256(_proofs[proof_index]) == 0x50) {
                 proof_index++;
-                if(stack_top==0){
+                if (stack_top == 0) {
                     revert();
                 }
-                if(proof_index + 1>_proofs.length){
+                if (proof_index + 1 > _proofs.length) {
                     revert();
                 }
                 bytes32 current_proof = _proofs[proof_index++];
-                if(stack_keys[stack_top-1]&1 == 1){
-                    stack_values[stack_top-1] = merge(current_proof,stack_values[stack_top-1]);
-                }else{
-                    stack_values[stack_top-1] = merge(stack_values[stack_top-1],current_proof);
+                if (stack_keys[stack_top - 1] & 1 == 1) {
+                    stack_values[stack_top - 1] = merge(
+                        current_proof,
+                        stack_values[stack_top - 1]
+                    );
+                } else {
+                    stack_values[stack_top - 1] = merge(
+                        stack_values[stack_top - 1],
+                        current_proof
+                    );
                 }
-                stack_keys[stack_top-1] = stack_keys[stack_top-1] >> 1;
-
-            }else if(uint256(_proofs[proof_index]) == 0x48){
+                stack_keys[stack_top - 1] = stack_keys[stack_top - 1] >> 1;
+            } else if (uint256(_proofs[proof_index]) == 0x48) {
                 proof_index++;
-                if(stack_top < 2){
+                if (stack_top < 2) {
                     revert();
                 }
-                if(proof_index > _proofs.length){
+                if (proof_index > _proofs.length) {
                     revert();
                 }
-                uint160 a_set = stack_keys[stack_top - 2]&1;
-                uint160 b_set = stack_keys[stack_top - 1]&1;
+                uint160 a_set = stack_keys[stack_top - 2] & 1;
+                uint160 b_set = stack_keys[stack_top - 1] & 1;
                 stack_keys[stack_top - 2] = stack_keys[stack_top - 2] >> 1;
                 stack_keys[stack_top - 1] = stack_keys[stack_top - 1] >> 1;
-                if(stack_keys[stack_top - 2] != stack_keys[stack_top - 1]||a_set == b_set){
+                if (
+                    stack_keys[stack_top - 2] != stack_keys[stack_top - 1] ||
+                    a_set == b_set
+                ) {
                     revert();
                 }
-                if(a_set == 1){
-                    stack_values[stack_top - 2] = merge(stack_values[stack_top - 1],stack_values[stack_top - 2]);
-                }else{
-                    stack_values[stack_top - 2] = merge(stack_values[stack_top - 2],stack_values[stack_top - 1]);
+                if (a_set == 1) {
+                    stack_values[stack_top - 2] = merge(
+                        stack_values[stack_top - 1],
+                        stack_values[stack_top - 2]
+                    );
+                } else {
+                    stack_values[stack_top - 2] = merge(
+                        stack_values[stack_top - 2],
+                        stack_values[stack_top - 1]
+                    );
                 }
                 stack_top -= 1;
-            }else{
+            } else {
                 revert();
             }
         }
-        if(leave_index != _leafs.length){
+        if (leave_index != _leafs.length) {
             revert();
         }
-        if(stack_top != 1){
+        if (stack_top != 1) {
             revert();
         }
-        return stack_values[0]; 
+        return stack_values[0];
     }
 }
