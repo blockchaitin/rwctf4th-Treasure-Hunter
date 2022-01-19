@@ -34,15 +34,18 @@ library SMT {
             return keccak256(abi.encode(l, r));
         }
     }
-    function verifySingleTargetByMode(
+
+    function verifySingleByMode(
         bytes32[] memory _proofs,
         address target,
         bytes32 _expectedRoot,
-        Mode _mode) internal pure returns (bool){
+        Mode _mode
+    ) internal pure returns (bool) {
         address[] memory targets = new address[](1);
         targets[0] = target;
-        return verifyByMode(_proofs,targets,_expectedRoot,_mode);
+        return verifyByMode(_proofs, targets, _expectedRoot, _mode);
     }
+
     function verifyByMode(
         bytes32[] memory _proofs,
         address[] memory _targets,

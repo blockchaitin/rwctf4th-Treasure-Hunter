@@ -20,28 +20,52 @@ contract TreasureHunter {
     }
 
     function _init() internal {
-        address a = 0x0ef47A239b19d35614B5358A1b9B8870BBc1EEc8;
-        root = SMT.insert(new bytes32[](0), 0, a, root);
+        address B = 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4;
+        address A = 0x0ef47A239b19d35614B5358A1b9B8870BBc1EEc8;
+        SMT.Leaf memory oldA = SMT.Leaf({key: A, value: 0});
+        SMT.Leaf memory oldB = SMT.Leaf({key: B, value: 0});
+        SMT.Leaf memory newA = SMT.Leaf({key: A, value: 1});
+        SMT.Leaf memory newB = SMT.Leaf({key: B, value: 1});
+        SMT.Leaf[] memory newLeaves = new SMT.Leaf[](2);
+        SMT.Leaf[] memory oldLeaves = new SMT.Leaf[](2);
+        newLeaves[0] = newA;
+        newLeaves[1] = newB;
+        oldLeaves[0] = oldA;
+        oldLeaves[1] = oldB;
+        bytes32[] memory proof = new bytes32[](4);
+        proof[
+            0
+        ] = 0x000000000000000000000000000000000000000000000000000000000000004c;
+        proof[
+            1
+        ] = 0x000000000000000000000000000000000000000000000000000000000000004c;
+        proof[
+            2
+        ] = 0x0000000000000000000000000000000000000000000000000000000000000048;
+        proof[
+            3
+        ] = 0x000000000000000000000000000000000000000000000000000000000000009e;
+        root = SMT.update(proof, newLeaves, oldLeaves, root);
     }
 
-    function enter(bytes32[] memory _proofs, uint160 _bits) public {
-        SMT.insert(_proofs, _bits, msg.sender, root);
+    function enter(bytes32[] memory _proofs) public {
+        SMT.insert(_proofs, msg.sender, root);
     }
 
-    function findKeys(bytes32[] memory _proofs, uint160 _bits) public {
+    function findKeys(bytes32[] memory _proofs) public {
         require(smtMode == SMT.Mode.BlackList, "not blacklist mode");
         require(
-            SMT.verifyByMode(_proofs, _bits, msg.sender, root, smtMode),
+            SMT.verifySingleByMode(_proofs, msg.sender, root, smtMode),
             "in blacklist"
         );
         hasKey[msg.sender] = true;
         emit FindKey(msg.sender);
     }
 
-    function pickupTreasure(bytes32[] memory _proofs, uint160 _bits) public {
+    function pickupTreasure(bytes32[] memory _proofs) public {
         require(smtMode == SMT.Mode.WhiteList, "not whitelist mode");
         require(
-            SMT.verifyByMode(_proofs, _bits, msg.sender, root, smtMode),
+            SMT.verifySingleByMode(_proofs, msg.sender, root, smtMode),
             "not in whitelist"
         );
         hasTreasure[msg.sender] = true;
