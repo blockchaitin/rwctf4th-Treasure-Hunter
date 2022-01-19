@@ -236,7 +236,7 @@ library SMT {
                 revert();
             }
         }
-        if (leaveIndex != _leafs.length) {
+        if (leaveIndex != _leaves.length) {
             revert();
         }
         if (stackTop != 1) {
