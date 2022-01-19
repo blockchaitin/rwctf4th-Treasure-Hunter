@@ -22,16 +22,12 @@ contract TreasureHunter {
     function _init() internal {
         address B = 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4;
         address A = 0x0ef47A239b19d35614B5358A1b9B8870BBc1EEc8;
-        SMT.Leaf memory oldA = SMT.Leaf({key: A, value: 0});
-        SMT.Leaf memory oldB = SMT.Leaf({key: B, value: 0});
-        SMT.Leaf memory newA = SMT.Leaf({key: A, value: 1});
-        SMT.Leaf memory newB = SMT.Leaf({key: B, value: 1});
         SMT.Leaf[] memory newLeaves = new SMT.Leaf[](2);
         SMT.Leaf[] memory oldLeaves = new SMT.Leaf[](2);
-        newLeaves[0] = newA;
-        newLeaves[1] = newB;
-        oldLeaves[0] = oldA;
-        oldLeaves[1] = oldB;
+        newLeaves[0] = SMT.Leaf({key: A, value: 0});
+        newLeaves[1] = SMT.Leaf({key: B, value: 0});
+        oldLeaves[0] = SMT.Leaf({key: A, value: 1});
+        oldLeaves[1] = SMT.Leaf({key: B, value: 1});
         bytes32[] memory proof = new bytes32[](4);
         proof[
             0
@@ -49,7 +45,11 @@ contract TreasureHunter {
     }
 
     function enter(bytes32[] memory _proofs) public {
-        SMT.insert(_proofs, msg.sender, root);
+        root = SMT.updateSingle(_proofs, msg.sender, root, SMT.Method.Insert);
+    }
+
+    function leave(bytes32[] memory _proofs) public {
+        root = SMT.updateSingle(_proofs, msg.sender, root, SMT.Method.Delete);
     }
 
     function findKeys(bytes32[] memory _proofs) public {

@@ -13,6 +13,11 @@ library SMT {
         WhiteList
     }
 
+    enum Method {
+        Insert,
+        Delete
+    }
+
     function init() internal pure returns (bytes32) {
         return 0;
     }
@@ -37,12 +42,12 @@ library SMT {
 
     function verifySingleByMode(
         bytes32[] memory _proofs,
-        address target,
+        address _target,
         bytes32 _expectedRoot,
         Mode _mode
     ) internal pure returns (bool) {
         address[] memory targets = new address[](1);
-        targets[0] = target;
+        targets[0] = _target;
         return verifyByMode(_proofs, targets, _expectedRoot, _mode);
     }
 
@@ -67,31 +72,16 @@ library SMT {
         return (calcRoot(_proofs, _leaves) == _expectedRoot);
     }
 
-    function insert(
+    function updateSingle(
         bytes32[] memory _proofs,
         address _target,
-        bytes32 _prevRoot
+        bytes32 _prevRoot,
+        Method _method
     ) internal pure returns (bytes32) {
-        Leaf memory nextLeaf = Leaf({key: _target, value: 1});
-        Leaf memory prevLeaf = Leaf({key: _target, value: 0});
         Leaf[] memory nextLeaves = new Leaf[](1);
         Leaf[] memory prevLeaves = new Leaf[](1);
-        nextLeaves[0] = nextLeaf;
-        prevLeaves[0] = prevLeaf;
-        return update(_proofs, nextLeaves, prevLeaves, _prevRoot);
-    }
-
-    function remove(
-        bytes32[] memory _proofs,
-        address _target,
-        bytes32 _prevRoot
-    ) internal pure returns (bytes32) {
-        Leaf memory nextLeaf = Leaf({key: _target, value: 0});
-        Leaf memory prevLeaf = Leaf({key: _target, value: 1});
-        Leaf[] memory nextLeaves = new Leaf[](1);
-        Leaf[] memory prevLeaves = new Leaf[](1);
-        nextLeaves[0] = nextLeaf;
-        prevLeaves[0] = prevLeaf;
+        nextLeaves[0] = Leaf({key: _target, value: uint8(_method) ^ 1});
+        prevLeaves[0] = Leaf({key: _target, value: uint8(_method) ^ 0});
         return update(_proofs, nextLeaves, prevLeaves, _prevRoot);
     }
 
