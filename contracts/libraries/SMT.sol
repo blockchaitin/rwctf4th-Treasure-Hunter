@@ -42,11 +42,11 @@ library SMT {
     ) internal pure returns (bytes32) {
         Leaf memory nextLeaf = Leaf({key: _target, value: 1});
         Leaf memory prevLeaf = Leaf({key: _target, value: 0});
-        Leaf[] memory nextLeafs = new Leaf[](1);
-        Leaf[] memory prevLeafs = new Leaf[](1);
-        nextLeafs[0] = nextLeaf;
-        prevLeafs[0] = prevLeaf;
-        return update(_proofs, nextLeafs, prevLeafs, _prevRoot);
+        Leaf[] memory nextLeaves = new Leaf[](1);
+        Leaf[] memory prevLeaves = new Leaf[](1);
+        nextLeaves[0] = nextLeaf;
+        prevLeaves[0] = prevLeaf;
+        return update(_proofs, nextLeaves, prevLeaves, _prevRoot);
     }
 
     function remove(
@@ -56,11 +56,11 @@ library SMT {
     )internal pure returns (bytes32){
         Leaf memory nextLeaf = Leaf({key: _target, value: 0});
         Leaf memory prevLeaf = Leaf({key: _target, value: 1});
-        Leaf[] memory nextLeafs = new Leaf[](1);
-        Leaf[] memory prevLeafs = new Leaf[](1);
-        nextLeafs[0] = nextLeaf;
-        prevLeafs[0] = prevLeaf;
-        return update(_proofs, nextLeafs, prevLeafs, _prevRoot);
+        Leaf[] memory nextLeaves = new Leaf[](1);
+        Leaf[] memory prevLeaves = new Leaf[](1);
+        nextLeaves[0] = nextLeaf;
+        prevLeaves[0] = prevLeaf;
+        return update(_proofs, nextLeaves, prevLeaves, _prevRoot);
     }
 
     function verifyByMode(
@@ -69,43 +69,43 @@ library SMT {
         bytes32 _expectedRoot,
         Mode _mode
     ) internal pure returns (bool) {
-        Leaf[] memory leafs = new Leaf[](_target.length);
+        Leaf[] memory leaves = new Leaf[](_target.length);
         for(uint i = 0;i<_target.length;i++){
-            leafs[i] = Leaf({key: _target[i], value: uint8(_mode)});
+            leaves[i] = Leaf({key: _target[i], value: uint8(_mode)});
         }
-        return verify(_proofs, leafs, _expectedRoot);
+        return verify(_proofs, leaves, _expectedRoot);
     }
 
     
     function verify(
         bytes32[] memory _proofs,
-        Leaf[] memory _leafs,
+        Leaf[] memory _leaves,
         bytes32 _expectedRoot
     ) internal pure returns (bool) {
-        return (calcRoot(_proofs, _leafs) == _expectedRoot);
+        return (calcRoot(_proofs, _leaves) == _expectedRoot);
     }
 
     function update(
         bytes32[] memory _proofs,
-        Leaf[] memory _nextLeafs,
-        Leaf[] memory _prevLeafs,
+        Leaf[] memory _nextLeaves,
+        Leaf[] memory _prevLeaves,
         bytes32 _prevRoot
     ) internal pure returns (bytes32) {
         require(
-            verify(_proofs, _prevLeafs, _prevRoot),
+            verify(_proofs, _prevLeaves, _prevRoot),
             "update proof not valid"
         );
-        return calcRoot(_proofs, _nextLeafs);
+        return calcRoot(_proofs, _nextLeaves);
     }
 
-    function checkGroupSorted(Leaf[] memory _leafs)internal pure returns (bool){
-        require(_leafs.length >= 1);
+    function checkGroupSorted(Leaf[] memory _leaves)internal pure returns (bool){
+        require(_leaves.length >= 1);
         uint160 temp = 0;
-        for(uint i = 0;i < _leafs.length;i++){
-            if(temp >= uint160(_leafs[i].key)){
+        for(uint i = 0;i < _leaves.length;i++){
+            if(temp >= uint160(_leaves[i].key)){
                 return false;
             }
-            temp = uint160(_leafs[i].key);
+            temp = uint160(_leaves[i].key);
         }
         return true;
     }
@@ -131,7 +131,7 @@ library SMT {
 
     function calcRoot(
         bytes32[] memory _proofs,
-        Leaf[] memory _leafs
+        Leaf[] memory _leaves
     )internal pure returns (bytes32){
         require(checkGroupSorted(_leafs));
         uint160[] memory stack_keys = new uint160[](SMT_STACK_SIZE);
@@ -146,11 +146,11 @@ library SMT {
                 if(stack_top >= SMT_STACK_SIZE){
                     revert();
                 }
-                if(leave_index >= _leafs.length){
+                if(leave_index >= _leaves.length){
                     revert();
                 }
-                stack_keys[stack_top] = uint160(_leafs[leave_index].key);
-                stack_values[stack_top] = calcLeaf(_leafs[leave_index]);
+                stack_keys[stack_top] = uint160(_leaves[leave_index].key);
+                stack_values[stack_top] = calcLeaf(_leaves[leave_index]);
                 stack_top++;
                 leave_index++;
             }else if(uint256(_proofs[proof_index]) == 0x50){
