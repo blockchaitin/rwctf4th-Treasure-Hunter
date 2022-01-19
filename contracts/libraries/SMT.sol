@@ -53,7 +53,7 @@ library SMT {
         bytes32[] memory _proofs,
         address _target,
         bytes32 _prevRoot
-    )internal pure returns (bytes32){
+    ) internal pure returns (bytes32) {
         Leaf memory nextLeaf = Leaf({key: _target, value: 0});
         Leaf memory prevLeaf = Leaf({key: _target, value: 1});
         Leaf[] memory nextLeaves = new Leaf[](1);
@@ -70,13 +70,12 @@ library SMT {
         Mode _mode
     ) internal pure returns (bool) {
         Leaf[] memory leaves = new Leaf[](_target.length);
-        for(uint i = 0;i<_target.length;i++){
+        for (uint256 i = 0; i < _target.length; i++) {
             leaves[i] = Leaf({key: _target[i], value: uint8(_mode)});
         }
         return verify(_proofs, leaves, _expectedRoot);
     }
 
-    
     function verify(
         bytes32[] memory _proofs,
         Leaf[] memory _leaves,
@@ -98,188 +97,151 @@ library SMT {
         return calcRoot(_proofs, _nextLeaves);
     }
 
-    function checkGroupSorted(Leaf[] memory _leaves)internal pure returns (bool){
+    function checkGroupSorted(Leaf[] memory _leaves)
+        internal
+        pure
+        returns (bool)
+    {
         require(_leaves.length >= 1);
         uint160 temp = 0;
-        for(uint i = 0;i < _leaves.length;i++){
-            if(temp >= uint160(_leaves[i].key)){
+        for (uint256 i = 0; i < _leaves.length; i++) {
+            if (temp >= uint160(_leaves[i].key)) {
                 return false;
             }
             temp = uint160(_leaves[i].key);
         }
         return true;
     }
-    function getBit(uint160 key,uint256 height) internal pure returns(uint256){
-        if(height>=160){
+
+    function getBit(uint160 key, uint256 height)
+        internal
+        pure
+        returns (uint256)
+    {
+        if (height >= 160) {
             revert();
         }
-        return (key>>height)&1;
-    }
-    function parentPath(uint160 key,uint256 height) internal pure returns(uint160){
-        if(height>=160){
-            revert();
-        }
-        return copyBit(key,height+1);
+        return (key >> height) & 1;
     }
 
-    function copyBit(uint160 key,uint256 height) internal pure returns(uint160){
-        if(height>=160){
+    function parentPath(uint160 key, uint256 height)
+        internal
+        pure
+        returns (uint160)
+    {
+        if (height >= 160) {
             revert();
         }
-        return ((key>>height)<<height);
+        return copyBit(key, height + 1);
     }
 
-    function calcRoot(
-        bytes32[] memory _proofs,
-        Leaf[] memory _leaves
-    )internal pure returns (bytes32){
+    function copyBit(uint160 key, uint256 height)
+        internal
+        pure
+        returns (uint160)
+    {
+        if (height >= 160) {
+            revert();
+        }
+        return ((key >> height) << height);
+    }
+
+    function calcRoot(bytes32[] memory _proofs, Leaf[] memory _leaves)
+        internal
+        pure
+        returns (bytes32)
+    {
         require(checkGroupSorted(_leaves));
         uint160[] memory stackKeys = new uint160[](SMT_STACK_SIZE);
         bytes32[] memory stackValues = new bytes32[](SMT_STACK_SIZE);
-        uint proofIndex = 0;
-        uint leaveIndex = 0;
-        uint stackTop = 0;
+        uint256 proofIndex = 0;
+        uint256 leaveIndex = 0;
+        uint256 stackTop = 0;
 
-        while(proofIndex < _proofs.length){
-            if(uint256(_proofs[proofIndex]) == 0x4c){
+        while (proofIndex < _proofs.length) {
+            if (uint256(_proofs[proofIndex]) == 0x4c) {
                 proofIndex++;
-                if(stackTop >= SMT_STACK_SIZE){
+                if (stackTop >= SMT_STACK_SIZE) {
                     revert();
                 }
-                if(leaveIndex >= _leaves.length){
+                if (leaveIndex >= _leaves.length) {
                     revert();
                 }
                 stackKeys[stackTop] = uint160(_leaves[leaveIndex].key);
                 stackValues[stackTop] = calcLeaf(_leaves[leaveIndex]);
                 stackTop++;
                 leaveIndex++;
-            }else if(uint256(_proofs[proofIndex]) == 0x50){
+            } else if (uint256(_proofs[proofIndex]) == 0x50) {
                 proofIndex++;
-                if(stackTop==0){
+                if (stackTop == 0) {
                     revert();
                 }
-                if(proofIndex + 2>_proofs.length){
+                if (proofIndex + 2 > _proofs.length) {
                     revert();
                 }
                 uint256 height = uint256(_proofs[proofIndex++]);
                 bytes32 currentProof = _proofs[proofIndex++];
-                if(getBit(stackKeys[stackTop-1],height)==1){
-                    stackValues[stackTop-1] = merge(currentProof,stackValues[stackTop-1]);
-                }else{
-                    stackValues[stackTop-1] = merge(stackValues[stackTop-1],currentProof);
+                if (getBit(stackKeys[stackTop - 1], height) == 1) {
+                    stackValues[stackTop - 1] = merge(
+                        currentProof,
+                        stackValues[stackTop - 1]
+                    );
+                } else {
+                    stackValues[stackTop - 1] = merge(
+                        stackValues[stackTop - 1],
+                        currentProof
+                    );
                 }
-                stackKeys[stackTop-1] = parentPath(stackKeys[stackTop-1],height);
-
-            }else if(uint256(_proofs[proofIndex]) == 0x48){
+                stackKeys[stackTop - 1] = parentPath(
+                    stackKeys[stackTop - 1],
+                    height
+                );
+            } else if (uint256(_proofs[proofIndex]) == 0x48) {
                 proofIndex++;
-                if(stackTop < 2){
+                if (stackTop < 2) {
                     revert();
                 }
-                if(proofIndex >= _proofs.length){
+                if (proofIndex >= _proofs.length) {
                     revert();
                 }
                 uint256 height = uint256(_proofs[proofIndex++]);
-                uint256 aSet = getBit(stackKeys[stackTop - 2],height);
-                uint256 bSet = getBit(stackKeys[stackTop - 1],height);
-                stackKeys[stackTop - 2] = parentPath(stackKeys[stackTop - 2],height);
-                stackKeys[stackTop - 1] = parentPath(stackKeys[stackTop - 1],height);
-                require(stackKeys[stackTop - 2] == stackKeys[stackTop - 1]&&aSet != bSet);
+                uint256 aSet = getBit(stackKeys[stackTop - 2], height);
+                uint256 bSet = getBit(stackKeys[stackTop - 1], height);
+                stackKeys[stackTop - 2] = parentPath(
+                    stackKeys[stackTop - 2],
+                    height
+                );
+                stackKeys[stackTop - 1] = parentPath(
+                    stackKeys[stackTop - 1],
+                    height
+                );
+                require(
+                    stackKeys[stackTop - 2] == stackKeys[stackTop - 1] &&
+                        aSet != bSet
+                );
 
-                if(aSet == 1){
-                    stackValues[stackTop - 2] = merge(stackValues[stackTop - 1],stackValues[stackTop - 2]);
-                }else{
-                    stackValues[stackTop - 2] = merge(stackValues[stackTop - 2],stackValues[stackTop - 1]);
+                if (aSet == 1) {
+                    stackValues[stackTop - 2] = merge(
+                        stackValues[stackTop - 1],
+                        stackValues[stackTop - 2]
+                    );
+                } else {
+                    stackValues[stackTop - 2] = merge(
+                        stackValues[stackTop - 2],
+                        stackValues[stackTop - 1]
+                    );
                 }
                 stackTop -= 1;
-            }else{
+            } else {
                 revert();
             }
         }
-        if(leaveIndex != _leafs.length){
+        if (leaveIndex != _leafs.length) {
             revert();
         }
-        if(stackTop != 1){
+        if (stackTop != 1) {
             revert();
         }
-        return stackValues[0]; 
+        return stackValues[0];
     }
-
 }
-
-contract SMTTEST{
-    bytes32 public root_hash;
-    SMT.Mode public mode;
-    constructor () public{
-        root_hash = SMT.init();
-        mode = SMT.Mode.BlackList;
-    }
-    function test() public returns(bytes32){
-        address B = 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4;
-        address A = 0x0ef47A239b19d35614B5358A1b9B8870BBc1EEc8;
-        SMT.Leaf memory a = SMT.Leaf({key: A, value: 1});
-        SMT.Leaf memory b = SMT.Leaf({key: B, value: 1});
-        return SMT.merge(SMT.calcLeaf(a),SMT.calcLeaf(b));
-    }
-    function test1() public returns (bytes32){
-        bytes32 root_test1;
-        address B = 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4;
-        address A = 0x0ef47A239b19d35614B5358A1b9B8870BBc1EEc8;
-        bytes32[] memory proofA = new bytes32[](1);
-        proofA[0] = 0x000000000000000000000000000000000000000000000000000000000000004c;
-        root_test1 = SMT.insert(proofA,A,root_hash);
-        // height = 0x9e
-        bytes32[] memory proofB = new bytes32[](4);
-        proofB[0] = 0x000000000000000000000000000000000000000000000000000000000000004c;
-        proofB[1] = 0x0000000000000000000000000000000000000000000000000000000000000050;
-        proofB[2] = 0x000000000000000000000000000000000000000000000000000000000000009e;
-        proofB[3] = 0xc900f070e856257e6229f01632ed3eb7117f32834209f831c24e464c9ab81eaf;
-        root_test1 = SMT.insert(proofB,B,root_test1);
-        return root_test1;
-    }
-    function test2() public returns (bytes32){
-        address B = 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4;
-        address A = 0x0ef47A239b19d35614B5358A1b9B8870BBc1EEc8;
-        SMT.Leaf memory oldA = SMT.Leaf({key: A, value: 0});
-        SMT.Leaf memory oldB = SMT.Leaf({key: B, value: 0});
-        SMT.Leaf memory newA = SMT.Leaf({key: A, value: 1});
-        SMT.Leaf memory newB = SMT.Leaf({key: B, value: 1});
-        SMT.Leaf[] memory newleafs = new SMT.Leaf[](2);
-        SMT.Leaf[] memory oldleafs = new SMT.Leaf[](2);
-        newleafs[0] = newA;
-        newleafs[1] = newB;
-        oldleafs[0] = oldA;
-        oldleafs[1] = oldB;
-        bytes32[] memory proof = new bytes32[](4);
-        proof[0] = 0x000000000000000000000000000000000000000000000000000000000000004c;
-        proof[1] = 0x000000000000000000000000000000000000000000000000000000000000004c;
-        proof[2] = 0x0000000000000000000000000000000000000000000000000000000000000048;
-        proof[3] = 0x000000000000000000000000000000000000000000000000000000000000009e;
-        root_hash = SMT.update(proof,newleafs,oldleafs,root_hash);
-        return root_hash;
-    }
-    function exp() public returns(bool){
-        address B = 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4;
-        address[] memory target = new address[](1);
-        target[0] = B;
-        bytes32[] memory proof = new bytes32[](7);
-        proof[0] = 0x000000000000000000000000000000000000000000000000000000000000004c;
-        proof[1] = 0x0000000000000000000000000000000000000000000000000000000000000050;
-        proof[2] = 0x0000000000000000000000000000000000000000000000000000000000000001;
-        proof[3] = 0x36306db541fd1551fd93a60031e8a8c89d69ddef41d6249f5fdc265dbc8fffa2;
-        proof[4] = 0x0000000000000000000000000000000000000000000000000000000000000050;
-        proof[5] = 0x000000000000000000000000000000000000000000000000000000000000009e;
-        proof[6] = 0xc900f070e856257e6229f01632ed3eb7117f32834209f831c24e464c9ab81eaf;
-        return SMT.verifyByMode(proof,target,root_hash,mode);
-    }
-    //leaf a = 0xc900f070e856257e6229f01632ed3eb7117f32834209f831c24e464c9ab81eaf
-    // leaf b = 0x36306db541fd1551fd93a60031e8a8c89d69ddef41d6249f5fdc265dbc8fffa2
-    /*
-    function testinsert() public{
-        
-        address B = 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4;
-        address A = 0x0ef47A239b19d35614B5358A1b9B8870BBc1EEc8;
-    }
-    */
-
-}
-
