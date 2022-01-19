@@ -35,6 +35,27 @@ library SMT {
         }
     }
 
+    function verifyByMode(
+        bytes32[] memory _proofs,
+        address[] memory _target,
+        bytes32 _expectedRoot,
+        Mode _mode
+    ) internal pure returns (bool) {
+        Leaf[] memory leaves = new Leaf[](_target.length);
+        for (uint256 i = 0; i < _target.length; i++) {
+            leaves[i] = Leaf({key: _target[i], value: uint8(_mode)});
+        }
+        return verify(_proofs, leaves, _expectedRoot);
+    }
+
+    function verify(
+        bytes32[] memory _proofs,
+        Leaf[] memory _leaves,
+        bytes32 _expectedRoot
+    ) internal pure returns (bool) {
+        return (calcRoot(_proofs, _leaves) == _expectedRoot);
+    }
+
     function insert(
         bytes32[] memory _proofs,
         address _target,
@@ -61,27 +82,6 @@ library SMT {
         nextLeaves[0] = nextLeaf;
         prevLeaves[0] = prevLeaf;
         return update(_proofs, nextLeaves, prevLeaves, _prevRoot);
-    }
-
-    function verifyByMode(
-        bytes32[] memory _proofs,
-        address[] memory _target,
-        bytes32 _expectedRoot,
-        Mode _mode
-    ) internal pure returns (bool) {
-        Leaf[] memory leaves = new Leaf[](_target.length);
-        for (uint256 i = 0; i < _target.length; i++) {
-            leaves[i] = Leaf({key: _target[i], value: uint8(_mode)});
-        }
-        return verify(_proofs, leaves, _expectedRoot);
-    }
-
-    function verify(
-        bytes32[] memory _proofs,
-        Leaf[] memory _leaves,
-        bytes32 _expectedRoot
-    ) internal pure returns (bool) {
-        return (calcRoot(_proofs, _leaves) == _expectedRoot);
     }
 
     function update(
