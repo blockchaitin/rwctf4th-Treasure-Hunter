@@ -134,74 +134,74 @@ library SMT {
         Leaf[] memory _leaves
     )internal pure returns (bytes32){
         require(checkGroupSorted(_leaves));
-        uint160[] memory stack_keys = new uint160[](SMT_STACK_SIZE);
-        bytes32[] memory stack_values = new bytes32[](SMT_STACK_SIZE);
-        uint proof_index = 0;
-        uint leave_index = 0;
-        uint stack_top = 0;
+        uint160[] memory stackKeys = new uint160[](SMT_STACK_SIZE);
+        bytes32[] memory stackValues = new bytes32[](SMT_STACK_SIZE);
+        uint proofIndex = 0;
+        uint leaveIndex = 0;
+        uint stackTop = 0;
 
-        while(proof_index < _proofs.length){
-            if(uint256(_proofs[proof_index]) == 0x4c){
-                proof_index++;
-                if(stack_top >= SMT_STACK_SIZE){
+        while(proofIndex < _proofs.length){
+            if(uint256(_proofs[proofIndex]) == 0x4c){
+                proofIndex++;
+                if(stackTop >= SMT_STACK_SIZE){
                     revert();
                 }
-                if(leave_index >= _leaves.length){
+                if(leaveIndex >= _leaves.length){
                     revert();
                 }
-                stack_keys[stack_top] = uint160(_leaves[leave_index].key);
-                stack_values[stack_top] = calcLeaf(_leaves[leave_index]);
-                stack_top++;
-                leave_index++;
-            }else if(uint256(_proofs[proof_index]) == 0x50){
-                proof_index++;
-                if(stack_top==0){
+                stackKeys[stackTop] = uint160(_leaves[leaveIndex].key);
+                stackValues[stackTop] = calcLeaf(_leaves[leaveIndex]);
+                stackTop++;
+                leaveIndex++;
+            }else if(uint256(_proofs[proofIndex]) == 0x50){
+                proofIndex++;
+                if(stackTop==0){
                     revert();
                 }
-                if(proof_index + 2>_proofs.length){
+                if(proofIndex + 2>_proofs.length){
                     revert();
                 }
-                uint256 height = uint256(_proofs[proof_index++]);
-                bytes32 current_proof = _proofs[proof_index++];
-                if(getBit(stack_keys[stack_top-1],height)==1){
-                    stack_values[stack_top-1] = merge(current_proof,stack_values[stack_top-1]);
+                uint256 height = uint256(_proofs[proofIndex++]);
+                bytes32 currentProof = _proofs[proofIndex++];
+                if(getBit(stackKeys[stackTop-1],height)==1){
+                    stackValues[stackTop-1] = merge(currentProof,stackValues[stackTop-1]);
                 }else{
-                    stack_values[stack_top-1] = merge(stack_values[stack_top-1],current_proof);
+                    stackValues[stackTop-1] = merge(stackValues[stackTop-1],currentProof);
                 }
-                stack_keys[stack_top-1] = parentPath(stack_keys[stack_top-1],height);
+                stackKeys[stackTop-1] = parentPath(stackKeys[stackTop-1],height);
 
-            }else if(uint256(_proofs[proof_index]) == 0x48){
-                proof_index++;
-                if(stack_top < 2){
+            }else if(uint256(_proofs[proofIndex]) == 0x48){
+                proofIndex++;
+                if(stackTop < 2){
                     revert();
                 }
-                if(proof_index >= _proofs.length){
+                if(proofIndex >= _proofs.length){
                     revert();
                 }
-                uint256 height = uint256(_proofs[proof_index++]);
-                uint256 a_set = getBit(stack_keys[stack_top - 2],height);
-                uint256 b_set = getBit(stack_keys[stack_top - 1],height);
-                stack_keys[stack_top - 2] = parentPath(stack_keys[stack_top - 2],height);
-                stack_keys[stack_top - 1] = parentPath(stack_keys[stack_top - 1],height);
-                require(stack_keys[stack_top - 2] == stack_keys[stack_top - 1]&&a_set != b_set);
+                uint256 height = uint256(_proofs[proofIndex++]);
+                uint256 aSet = getBit(stackKeys[stackTop - 2],height);
+                uint256 bSet = getBit(stackKeys[stackTop - 1],height);
+                stackKeys[stackTop - 2] = parentPath(stackKeys[stackTop - 2],height);
+                stackKeys[stackTop - 1] = parentPath(stackKeys[stackTop - 1],height);
+                require(stackKeys[stackTop - 2] == stackKeys[stackTop - 1]&&aSet != bSet);
 
-                if(a_set == 1){
-                    stack_values[stack_top - 2] = merge(stack_values[stack_top - 1],stack_values[stack_top - 2]);
+                if(aSet == 1){
+                    stackValues[stackTop - 2] = merge(stackValues[stackTop - 1],stackValues[stackTop - 2]);
                 }else{
-                    stack_values[stack_top - 2] = merge(stack_values[stack_top - 2],stack_values[stack_top - 1]);
+                    stackValues[stackTop - 2] = merge(stackValues[stackTop - 2],stackValues[stackTop - 1]);
                 }
-                stack_top -= 1;
+                stackTop -= 1;
             }else{
                 revert();
             }
         }
-        if(leave_index != _leafs.length){
+        if(leaveIndex != _leafs.length){
             revert();
         }
-        if(stack_top != 1){
+        if(stackTop != 1){
             revert();
         }
-        return stack_values[0]; 
+        return stackValues[0]; 
     }
 
 }
