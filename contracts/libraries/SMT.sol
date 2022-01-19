@@ -133,7 +133,7 @@ library SMT {
         bytes32[] memory _proofs,
         Leaf[] memory _leaves
     )internal pure returns (bytes32){
-        require(checkGroupSorted(_leafs));
+        require(checkGroupSorted(_leaves));
         uint160[] memory stack_keys = new uint160[](SMT_STACK_SIZE);
         bytes32[] memory stack_values = new bytes32[](SMT_STACK_SIZE);
         uint proof_index = 0;
