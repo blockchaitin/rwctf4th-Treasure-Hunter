@@ -1,6 +1,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 uint256 constant SMT_STACK_SIZE = 32;
+uint256 constant DEPTH = 160;
 
 library SMT {
     struct Leaf {
@@ -108,9 +109,7 @@ library SMT {
         pure
         returns (uint256)
     {
-        if (height >= 160) {
-            revert();
-        }
+        require(height < DEPTH);
         return (key >> height) & 1;
     }
 
@@ -119,9 +118,7 @@ library SMT {
         pure
         returns (uint160)
     {
-        if (height >= 160) {
-            revert();
-        }
+        require(height < DEPTH);
         return copyBit(key, height + 1);
     }
 
@@ -130,9 +127,7 @@ library SMT {
         pure
         returns (uint160)
     {
-        if (height >= 160) {
-            revert();
-        }
+        require(height < DEPTH);
         return ((key >> height) << height);
     }
 
@@ -151,24 +146,17 @@ library SMT {
         while (proofIndex < _proofs.length) {
             if (uint256(_proofs[proofIndex]) == 0x4c) {
                 proofIndex++;
-                if (stackTop >= SMT_STACK_SIZE) {
-                    revert();
-                }
-                if (leaveIndex >= _leaves.length) {
-                    revert();
-                }
+                require(stackTop < SMT_STACK_SIZE);
+                require(leaveIndex < _leaves.length);
                 stackKeys[stackTop] = uint160(_leaves[leaveIndex].key);
                 stackValues[stackTop] = calcLeaf(_leaves[leaveIndex]);
                 stackTop++;
                 leaveIndex++;
             } else if (uint256(_proofs[proofIndex]) == 0x50) {
                 proofIndex++;
-                if (stackTop == 0) {
-                    revert();
-                }
-                if (proofIndex + 2 > _proofs.length) {
-                    revert();
-                }
+                require(stackTop != 0);
+                require(proofIndex + 2 <= _proofs.length);
+
                 uint256 height = uint256(_proofs[proofIndex++]);
                 bytes32 currentProof = _proofs[proofIndex++];
                 if (getBit(stackKeys[stackTop - 1], height) == 1) {
@@ -188,12 +176,8 @@ library SMT {
                 );
             } else if (uint256(_proofs[proofIndex]) == 0x48) {
                 proofIndex++;
-                if (stackTop < 2) {
-                    revert();
-                }
-                if (proofIndex >= _proofs.length) {
-                    revert();
-                }
+                require(stackTop >= 2);
+                require(proofIndex < _proofs.length);
                 uint256 height = uint256(_proofs[proofIndex++]);
                 uint256 aSet = getBit(stackKeys[stackTop - 2], height);
                 uint256 bSet = getBit(stackKeys[stackTop - 1], height);
@@ -226,12 +210,8 @@ library SMT {
                 revert();
             }
         }
-        if (leaveIndex != _leaves.length) {
-            revert();
-        }
-        if (stackTop != 1) {
-            revert();
-        }
+        require(leaveIndex == _leaves.length);
+        require(stackTop == 1);
         return stackValues[0];
     }
 }
