@@ -45,17 +45,19 @@ contract TreasureHunter {
     }
 
     function enter(bytes32[] memory _proofs) public {
-        root = SMT.updateSingle(_proofs, msg.sender, root, SMT.Method.Insert);
+        root = SMT.updateSingleTarget(_proofs, msg.sender, root, SMT.Method.Insert);
     }
 
     function leave(bytes32[] memory _proofs) public {
-        root = SMT.updateSingle(_proofs, msg.sender, root, SMT.Method.Delete);
+        root = SMT.updateSingleTarget(_proofs, msg.sender, root, SMT.Method.Delete);
     }
 
     function findKeys(bytes32[] memory _proofs) public {
         require(smtMode == SMT.Mode.BlackList, "not blacklist mode");
+        address[] memory targets = new address[](1);
+        targets[0] = msg.sender;
         require(
-            SMT.verifySingleByMode(_proofs, msg.sender, root, smtMode),
+            SMT.verifyByMode(_proofs, targets, root, smtMode),
             "in blacklist"
         );
         hasKey[msg.sender] = true;
@@ -64,8 +66,10 @@ contract TreasureHunter {
 
     function pickupTreasure(bytes32[] memory _proofs) public {
         require(smtMode == SMT.Mode.WhiteList, "not whitelist mode");
+        address[] memory targets = new address[](1);
+        targets[0] = msg.sender;
         require(
-            SMT.verifySingleByMode(_proofs, msg.sender, root, smtMode),
+            SMT.verifyByMode(_proofs, targets, root, smtMode),
             "not in whitelist"
         );
         hasTreasure[msg.sender] = true;

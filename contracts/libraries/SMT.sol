@@ -40,17 +40,6 @@ library SMT {
         }
     }
 
-    function verifySingleByMode(
-        bytes32[] memory _proofs,
-        address _target,
-        bytes32 _expectedRoot,
-        Mode _mode
-    ) internal pure returns (bool) {
-        address[] memory targets = new address[](1);
-        targets[0] = _target;
-        return verifyByMode(_proofs, targets, _expectedRoot, _mode);
-    }
-
     function verifyByMode(
         bytes32[] memory _proofs,
         address[] memory _targets,
@@ -72,7 +61,7 @@ library SMT {
         return (calcRoot(_proofs, _leaves) == _expectedRoot);
     }
 
-    function updateSingle(
+    function updateSingleTarget(
         bytes32[] memory _proofs,
         address _target,
         bytes32 _prevRoot,
@@ -81,7 +70,7 @@ library SMT {
         Leaf[] memory nextLeaves = new Leaf[](1);
         Leaf[] memory prevLeaves = new Leaf[](1);
         nextLeaves[0] = Leaf({key: _target, value: uint8(_method) ^ 1});
-        prevLeaves[0] = Leaf({key: _target, value: uint8(_method) ^ 0});
+        prevLeaves[0] = Leaf({key: _target, value: uint8(_method)});
         return update(_proofs, nextLeaves, prevLeaves, _prevRoot);
     }
 
