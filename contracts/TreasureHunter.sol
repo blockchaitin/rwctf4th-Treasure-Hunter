@@ -45,10 +45,12 @@ contract TreasureHunter {
     }
 
     function enter(bytes32[] memory _proofs) public {
+        require(hasKey[msg.sender] == false);
         root = SMT.updateSingleTarget(_proofs, msg.sender, root, SMT.Method.Insert);
     }
 
     function leave(bytes32[] memory _proofs) public {
+        require(hasTreasure[msg.sender] == false);
         root = SMT.updateSingleTarget(_proofs, msg.sender, root, SMT.Method.Delete);
     }
 
@@ -61,6 +63,7 @@ contract TreasureHunter {
             "in blacklist"
         );
         hasKey[msg.sender] = true;
+        smtMode = SMT.Mode.WhiteList;
         emit FindKey(msg.sender);
     }
 
