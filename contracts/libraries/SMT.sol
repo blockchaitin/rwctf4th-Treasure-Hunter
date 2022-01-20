@@ -81,18 +81,11 @@ library SMT {
         Leaf[] memory _prevLeaves,
         bytes32 _prevRoot
     ) internal pure returns (bytes32) {
-        require(
-            verify(_proofs, _prevLeaves, _prevRoot),
-            "update proof not valid"
-        );
+        require(verify(_proofs, _prevLeaves, _prevRoot), "update proof not valid");
         return calcRoot(_proofs, _nextLeaves);
     }
 
-    function checkGroupSorted(Leaf[] memory _leaves)
-        internal
-        pure
-        returns (bool)
-    {
+    function checkGroupSorted(Leaf[] memory _leaves) internal pure returns (bool) {
         require(_leaves.length >= 1);
         uint160 temp = 0;
         for (uint256 i = 0; i < _leaves.length; i++) {
@@ -104,29 +97,17 @@ library SMT {
         return true;
     }
 
-    function getBit(uint160 key, uint256 height)
-        internal
-        pure
-        returns (uint256)
-    {
+    function getBit(uint160 key, uint256 height) internal pure returns (uint256) {
         require(height <= DEPTH);
         return (key >> height) & 1;
     }
 
-    function parentPath(uint160 key, uint256 height)
-        internal
-        pure
-        returns (uint160)
-    {
+    function parentPath(uint160 key, uint256 height) internal pure returns (uint160) {
         require(height <= DEPTH);
         return copyBit(key, height + 1);
     }
 
-    function copyBit(uint160 key, uint256 height)
-        internal
-        pure
-        returns (uint160)
-    {
+    function copyBit(uint160 key, uint256 height) internal pure returns (uint160) {
         require(height <= DEPTH);
         return ((key >> height) << height);
     }
@@ -160,20 +141,11 @@ library SMT {
                 uint256 height = uint256(_proofs[proofIndex++]);
                 bytes32 currentProof = _proofs[proofIndex++];
                 if (getBit(stackKeys[stackTop - 1], height) == 1) {
-                    stackValues[stackTop - 1] = merge(
-                        currentProof,
-                        stackValues[stackTop - 1]
-                    );
+                    stackValues[stackTop - 1] = merge(currentProof, stackValues[stackTop - 1]);
                 } else {
-                    stackValues[stackTop - 1] = merge(
-                        stackValues[stackTop - 1],
-                        currentProof
-                    );
+                    stackValues[stackTop - 1] = merge(stackValues[stackTop - 1], currentProof);
                 }
-                stackKeys[stackTop - 1] = parentPath(
-                    stackKeys[stackTop - 1],
-                    height
-                );
+                stackKeys[stackTop - 1] = parentPath(stackKeys[stackTop - 1], height);
             } else if (uint256(_proofs[proofIndex]) == 0x48) {
                 proofIndex++;
                 require(stackTop >= 2);
@@ -181,18 +153,9 @@ library SMT {
                 uint256 height = uint256(_proofs[proofIndex++]);
                 uint256 aSet = getBit(stackKeys[stackTop - 2], height);
                 uint256 bSet = getBit(stackKeys[stackTop - 1], height);
-                stackKeys[stackTop - 2] = parentPath(
-                    stackKeys[stackTop - 2],
-                    height
-                );
-                stackKeys[stackTop - 1] = parentPath(
-                    stackKeys[stackTop - 1],
-                    height
-                );
-                require(
-                    stackKeys[stackTop - 2] == stackKeys[stackTop - 1] &&
-                        aSet != bSet
-                );
+                stackKeys[stackTop - 2] = parentPath(stackKeys[stackTop - 2], height);
+                stackKeys[stackTop - 1] = parentPath(stackKeys[stackTop - 1], height);
+                require(stackKeys[stackTop - 2] == stackKeys[stackTop - 1] && aSet != bSet);
 
                 if (aSet == 1) {
                     stackValues[stackTop - 2] = merge(

@@ -20,37 +20,23 @@ contract TreasureHunter {
     }
 
     function _init() internal {
-        address YFI = 0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e;
-        address Uniswap = 0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45;
-        address Dai = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
-        address Sushi = 0x6B3595068778DD592e39A122f4f5a5cF09C90fE2;
-        address VB = 0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B;
-        address COMP = 0xc00e94Cb662C3520282E6f5717214004A7f26888;
-        address CRV = 0xD533a949740bb3306d119CC777fa900bA034cd52;
-        address USDT = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
-        
-        SMT.Leaf[] memory newLeaves = new SMT.Leaf[](8);
-        SMT.Leaf[] memory oldLeaves = new SMT.Leaf[](8);
-        newLeaves[0] = SMT.Leaf({key: YFI, value: 1});
-        newLeaves[1] = SMT.Leaf({key: Uniswap, value: 1});
-        newLeaves[2] = SMT.Leaf({key: Dai, value: 1});
-        newLeaves[3] = SMT.Leaf({key: Sushi, value: 1});
-        
-        newLeaves[4] = SMT.Leaf({key: VB, value: 1});
-        newLeaves[5] = SMT.Leaf({key: COMP, value: 1});
-        newLeaves[6] = SMT.Leaf({key: CRV, value: 1});
-        newLeaves[7] = SMT.Leaf({key: USDT, value: 1});
-        
-        oldLeaves[0] = SMT.Leaf({key: YFI, value: 0});
-        oldLeaves[1] = SMT.Leaf({key: Uniswap, value: 0});
-        oldLeaves[2] = SMT.Leaf({key: Dai, value: 0});
-        oldLeaves[3] = SMT.Leaf({key: Sushi, value: 0});
-        
-        oldLeaves[4] = SMT.Leaf({key: VB, value: 0});
-        oldLeaves[5] = SMT.Leaf({key: COMP, value: 0});
-        oldLeaves[6] = SMT.Leaf({key: CRV, value: 0});
-        oldLeaves[7] = SMT.Leaf({key: USDT, value: 0});
-        
+        address[] memory hunters = new address[](8);
+        hunters[0] = 0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e;
+        hunters[1] = 0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45;
+        hunters[2] = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
+        hunters[3] = 0x6B3595068778DD592e39A122f4f5a5cF09C90fE2;
+        hunters[4] = 0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B;
+        hunters[5] = 0xc00e94Cb662C3520282E6f5717214004A7f26888;
+        hunters[6] = 0xD533a949740bb3306d119CC777fa900bA034cd52;
+        hunters[7] = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
+
+        SMT.Leaf[] memory nextLeaves = new SMT.Leaf[](8);
+        SMT.Leaf[] memory prevLeaves = new SMT.Leaf[](8);
+        for (uint8 i = 0; i < hunters.length; i++) {
+            nextLeaves[i] = SMT.Leaf({key: hunters[i], value: 1});
+            prevLeaves[i] = SMT.Leaf({key: hunters[i], value: 0});
+        }
+
         bytes32[] memory proof = new bytes32[](22);
         proof[0] = 0x000000000000000000000000000000000000000000000000000000000000004c;
         proof[1] = 0x000000000000000000000000000000000000000000000000000000000000004c;
@@ -74,8 +60,8 @@ contract TreasureHunter {
         proof[19] = 0x000000000000000000000000000000000000000000000000000000000000009e;
         proof[20] = 0x0000000000000000000000000000000000000000000000000000000000000048;
         proof[21] = 0x000000000000000000000000000000000000000000000000000000000000009f;
-        
-        root = SMT.update(proof, newLeaves, oldLeaves, root);
+
+        root = SMT.update(proof, nextLeaves, prevLeaves, root);
     }
 
     function enter(bytes32[] memory _proofs) public {
@@ -92,10 +78,7 @@ contract TreasureHunter {
         require(smtMode == SMT.Mode.BlackList, "not blacklist mode");
         address[] memory targets = new address[](1);
         targets[0] = msg.sender;
-        require(
-            SMT.verifyByMode(_proofs, targets, root, smtMode),
-            "in blacklist"
-        );
+        require(SMT.verifyByMode(_proofs, targets, root, smtMode), "in blacklist");
         hasKey[msg.sender] = true;
         smtMode = SMT.Mode.WhiteList;
         emit FindKey(msg.sender);
@@ -105,10 +88,7 @@ contract TreasureHunter {
         require(smtMode == SMT.Mode.WhiteList, "not whitelist mode");
         address[] memory targets = new address[](1);
         targets[0] = msg.sender;
-        require(
-            SMT.verifyByMode(_proofs, targets, root, smtMode),
-            "not in whitelist"
-        );
+        require(SMT.verifyByMode(_proofs, targets, root, smtMode), "not in whitelist");
         hasTreasure[msg.sender] = true;
         smtMode = SMT.Mode.BlackList;
         emit PickupTreasure(msg.sender);
