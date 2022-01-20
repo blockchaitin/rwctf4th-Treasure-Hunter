@@ -109,7 +109,7 @@ library SMT {
         pure
         returns (uint256)
     {
-        require(height < DEPTH);
+        require(height <= DEPTH);
         return (key >> height) & 1;
     }
 
@@ -118,7 +118,7 @@ library SMT {
         pure
         returns (uint160)
     {
-        require(height < DEPTH);
+        require(height <= DEPTH);
         return copyBit(key, height + 1);
     }
 
@@ -127,7 +127,7 @@ library SMT {
         pure
         returns (uint160)
     {
-        require(height < DEPTH);
+        require(height <= DEPTH);
         return ((key >> height) << height);
     }
 
