@@ -1,14 +1,14 @@
 pragma solidity >=0.8.0 <0.9.0;
 
-import {SMT} from "./libraries/SMT.sol";
+import {SMT} from "./SparseMerkleTree.sol";
 
 contract TreasureHunter {
     bytes32 public root;
     SMT.Mode public smtMode = SMT.Mode.WhiteList;
     bool public solved = false;
 
-    mapping(address => bool) public hasTreasure;
-    mapping(address => bool) public hasKey;
+    mapping(address => bool) public haveKey;
+    mapping(address => bool) public haveTreasure;
 
     event FindKey(address indexed _from);
     event PickupTreasure(address indexed _from);
@@ -65,12 +65,12 @@ contract TreasureHunter {
     }
 
     function enter(bytes32[] memory _proofs) public {
-        require(hasKey[msg.sender] == false);
+        require(haveKey[msg.sender] == false);
         root = SMT.updateSingleTarget(_proofs, msg.sender, root, SMT.Method.Insert);
     }
 
     function leave(bytes32[] memory _proofs) public {
-        require(hasTreasure[msg.sender] == false);
+        require(haveTreasure[msg.sender] == false);
         root = SMT.updateSingleTarget(_proofs, msg.sender, root, SMT.Method.Delete);
     }
 
@@ -79,7 +79,7 @@ contract TreasureHunter {
         address[] memory targets = new address[](1);
         targets[0] = msg.sender;
         require(SMT.verifyByMode(_proofs, targets, root, smtMode), "in blacklist");
-        hasKey[msg.sender] = true;
+        haveKey[msg.sender] = true;
         smtMode = SMT.Mode.WhiteList;
         emit FindKey(msg.sender);
     }
@@ -89,13 +89,13 @@ contract TreasureHunter {
         address[] memory targets = new address[](1);
         targets[0] = msg.sender;
         require(SMT.verifyByMode(_proofs, targets, root, smtMode), "not in whitelist");
-        hasTreasure[msg.sender] = true;
+        haveTreasure[msg.sender] = true;
         smtMode = SMT.Mode.BlackList;
         emit PickupTreasure(msg.sender);
     }
 
     function openTreasure() public {
-        require(hasTreasure[msg.sender] && hasKey[msg.sender], "can't");
+        require(haveTreasure[msg.sender] && haveKey[msg.sender], "can't");
         solved = true;
         emit OpenTreasure(msg.sender);
     }
