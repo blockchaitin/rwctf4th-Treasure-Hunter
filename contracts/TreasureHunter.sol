@@ -20,27 +20,61 @@ contract TreasureHunter {
     }
 
     function _init() internal {
-        address B = 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4;
-        address A = 0x0ef47A239b19d35614B5358A1b9B8870BBc1EEc8;
-        SMT.Leaf[] memory newLeaves = new SMT.Leaf[](2);
-        SMT.Leaf[] memory oldLeaves = new SMT.Leaf[](2);
-        newLeaves[0] = SMT.Leaf({key: A, value: 1});
-        newLeaves[1] = SMT.Leaf({key: B, value: 1});
-        oldLeaves[0] = SMT.Leaf({key: A, value: 0});
-        oldLeaves[1] = SMT.Leaf({key: B, value: 0});
-        bytes32[] memory proof = new bytes32[](4);
-        proof[
-            0
-        ] = 0x000000000000000000000000000000000000000000000000000000000000004c;
-        proof[
-            1
-        ] = 0x000000000000000000000000000000000000000000000000000000000000004c;
-        proof[
-            2
-        ] = 0x0000000000000000000000000000000000000000000000000000000000000048;
-        proof[
-            3
-        ] = 0x000000000000000000000000000000000000000000000000000000000000009e;
+        address YFI = 0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e;
+        address Uniswap = 0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45;
+        address Dai = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
+        address Sushi = 0x6B3595068778DD592e39A122f4f5a5cF09C90fE2;
+        address VB = 0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B;
+        address COMP = 0xc00e94Cb662C3520282E6f5717214004A7f26888;
+        address CRV = 0xD533a949740bb3306d119CC777fa900bA034cd52;
+        address USDT = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
+        
+        SMT.Leaf[] memory newLeaves = new SMT.Leaf[](8);
+        SMT.Leaf[] memory oldLeaves = new SMT.Leaf[](8);
+        newLeaves[0] = SMT.Leaf({key: YFI, value: 1});
+        newLeaves[1] = SMT.Leaf({key: Uniswap, value: 1});
+        newLeaves[2] = SMT.Leaf({key: Dai, value: 1});
+        newLeaves[3] = SMT.Leaf({key: Sushi, value: 1});
+        
+        newLeaves[4] = SMT.Leaf({key: VB, value: 1});
+        newLeaves[5] = SMT.Leaf({key: COMP, value: 1});
+        newLeaves[6] = SMT.Leaf({key: CRV, value: 1});
+        newLeaves[7] = SMT.Leaf({key: USDT, value: 1});
+        
+        oldLeaves[0] = SMT.Leaf({key: YFI, value: 0});
+        oldLeaves[1] = SMT.Leaf({key: Uniswap, value: 0});
+        oldLeaves[2] = SMT.Leaf({key: Dai, value: 0});
+        oldLeaves[3] = SMT.Leaf({key: Sushi, value: 0});
+        
+        oldLeaves[4] = SMT.Leaf({key: VB, value: 0});
+        oldLeaves[5] = SMT.Leaf({key: COMP, value: 0});
+        oldLeaves[6] = SMT.Leaf({key: CRV, value: 0});
+        oldLeaves[7] = SMT.Leaf({key: USDT, value: 0});
+        
+        bytes32[] memory proof = new bytes32[](22);
+        proof[0] = 0x000000000000000000000000000000000000000000000000000000000000004c;
+        proof[1] = 0x000000000000000000000000000000000000000000000000000000000000004c;
+        proof[2] = 0x000000000000000000000000000000000000000000000000000000000000004c;
+        proof[3] = 0x000000000000000000000000000000000000000000000000000000000000004c;
+        proof[4] = 0x0000000000000000000000000000000000000000000000000000000000000048;
+        proof[5] = 0x0000000000000000000000000000000000000000000000000000000000000095;
+        proof[6] = 0x0000000000000000000000000000000000000000000000000000000000000048;
+        proof[7] = 0x0000000000000000000000000000000000000000000000000000000000000099;
+        proof[8] = 0x0000000000000000000000000000000000000000000000000000000000000048;
+        proof[9] = 0x000000000000000000000000000000000000000000000000000000000000009e;
+        proof[10] = 0x000000000000000000000000000000000000000000000000000000000000004c;
+        proof[11] = 0x000000000000000000000000000000000000000000000000000000000000004c;
+        proof[12] = 0x000000000000000000000000000000000000000000000000000000000000004c;
+        proof[13] = 0x000000000000000000000000000000000000000000000000000000000000004c;
+        proof[14] = 0x0000000000000000000000000000000000000000000000000000000000000048;
+        proof[15] = 0x000000000000000000000000000000000000000000000000000000000000009b;
+        proof[16] = 0x0000000000000000000000000000000000000000000000000000000000000048;
+        proof[17] = 0x000000000000000000000000000000000000000000000000000000000000009c;
+        proof[18] = 0x0000000000000000000000000000000000000000000000000000000000000048;
+        proof[19] = 0x000000000000000000000000000000000000000000000000000000000000009e;
+        proof[20] = 0x0000000000000000000000000000000000000000000000000000000000000048;
+        proof[21] = 0x000000000000000000000000000000000000000000000000000000000000009f;
+        
         root = SMT.update(proof, newLeaves, oldLeaves, root);
     }
 
