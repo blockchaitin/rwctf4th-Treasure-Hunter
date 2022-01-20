@@ -24,10 +24,10 @@ contract TreasureHunter {
         address A = 0x0ef47A239b19d35614B5358A1b9B8870BBc1EEc8;
         SMT.Leaf[] memory newLeaves = new SMT.Leaf[](2);
         SMT.Leaf[] memory oldLeaves = new SMT.Leaf[](2);
-        newLeaves[0] = SMT.Leaf({key: A, value: 0});
-        newLeaves[1] = SMT.Leaf({key: B, value: 0});
-        oldLeaves[0] = SMT.Leaf({key: A, value: 1});
-        oldLeaves[1] = SMT.Leaf({key: B, value: 1});
+        newLeaves[0] = SMT.Leaf({key: A, value: 1});
+        newLeaves[1] = SMT.Leaf({key: B, value: 1});
+        oldLeaves[0] = SMT.Leaf({key: A, value: 0});
+        oldLeaves[1] = SMT.Leaf({key: B, value: 0});
         bytes32[] memory proof = new bytes32[](4);
         proof[
             0
