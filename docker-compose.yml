@@ -1,0 +1,51 @@
+version: "3.3"
+services:
+  challenge:
+    image: chainflag/eth-challenge-base:0.9.2
+    ports:
+      - "20000:20000"
+    environment:
+      - WEB3_PROVIDER_URI=http://geth:8545
+    volumes:
+      - ./contracts:/home/ctf/contracts
+      - ./challenge.yml:/home/ctf/challenge.yml
+
+  geth:
+    build: geth
+    container_name: ethereum
+    volumes:
+      - ./geth/config:/config
+      - ./geth/data:/data
+    restart: always
+
+  proxy:
+    image: nginx:1.20-alpine
+    container_name: rpcproxy
+    ports:
+      - "8545:8545"
+    links:
+      - geth
+    volumes:
+      - ./geth/njs:/etc/nginx/njs
+      - ./geth/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - geth
+    restart: always
+
+  faucet:
+    image: chainflag/eth-faucet:1.0.0
+    container_name: ethfaucet
+    environment:
+      - WEB3_PROVIDER=http://geth:8545
+      - KEYSTORE=/app/keystore
+    ports:
+      - "8080:8080"
+    links:
+      - geth
+    volumes:
+      - ./geth/config/keystore:/app/keystore
+      - ./geth/config/password.txt:/app/password.txt
+    command: -interval 1
+    depends_on:
+      - geth
+    restart: always
