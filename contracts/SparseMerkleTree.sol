@@ -59,7 +59,7 @@ library SMT {
         Leaf[] memory _leaves,
         bytes32 _expectedRoot
     ) internal pure returns (bool) {
-        return (calcRoot(_proofs, _leaves) == _expectedRoot);
+        return (calcRoot(_proofs, _leaves, _expectedRoot) == _expectedRoot);
     }
 
     function updateSingleTarget(
@@ -82,7 +82,7 @@ library SMT {
         bytes32 _prevRoot
     ) internal pure returns (bytes32) {
         require(verify(_proofs, _prevLeaves, _prevRoot), "update proof not valid");
-        return calcRoot(_proofs, _nextLeaves);
+        return calcRoot(_proofs, _nextLeaves, _prevRoot);
     }
 
     function checkGroupSorted(Leaf[] memory _leaves) internal pure returns (bool) {
@@ -112,11 +112,11 @@ library SMT {
         return ((key >> height) << height);
     }
 
-    function calcRoot(bytes32[] memory _proofs, Leaf[] memory _leaves)
-        internal
-        pure
-        returns (bytes32)
-    {
+    function calcRoot(
+        bytes32[] memory _proofs,
+        Leaf[] memory _leaves,
+        bytes32 _root
+    ) internal pure returns (bytes32) {
         require(checkGroupSorted(_leaves));
         uint160[] memory stackKeys = new uint160[](SMT_STACK_SIZE);
         bytes32[] memory stackValues = new bytes32[](SMT_STACK_SIZE);
@@ -140,6 +140,7 @@ library SMT {
 
                 uint256 height = uint256(_proofs[proofIndex++]);
                 bytes32 currentProof = _proofs[proofIndex++];
+                require(currentProof != _root);
                 if (getBit(stackKeys[stackTop - 1], height) == 1) {
                     stackValues[stackTop - 1] = merge(currentProof, stackValues[stackTop - 1]);
                 } else {
