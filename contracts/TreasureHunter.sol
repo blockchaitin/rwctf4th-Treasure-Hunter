@@ -8,11 +8,11 @@ contract TreasureHunter {
     bool public solved = false;
 
     mapping(address => bool) public haveKey;
-    mapping(address => bool) public haveTreasure;
+    mapping(address => bool) public haveTreasureChest;
 
     event FindKey(address indexed _from);
-    event PickupTreasure(address indexed _from);
-    event OpenTreasure(address indexed _from);
+    event PickupTreasureChest(address indexed _from);
+    event OpenTreasureChest(address indexed _from);
 
     constructor() public {
         root = SMT.init();
@@ -70,7 +70,7 @@ contract TreasureHunter {
     }
 
     function leave(bytes32[] memory _proofs) public {
-        require(haveTreasure[msg.sender] == false);
+        require(haveTreasureChest[msg.sender] == false);
         root = SMT.updateSingleTarget(_proofs, msg.sender, root, SMT.Method.Delete);
     }
 
@@ -84,23 +84,23 @@ contract TreasureHunter {
         emit FindKey(msg.sender);
     }
 
-    function pickupTreasure(bytes32[] memory _proofs) public {
+    function pickupTreasureChest(bytes32[] memory _proofs) public {
         require(smtMode == SMT.Mode.WhiteList, "not whitelist mode");
         address[] memory targets = new address[](1);
         targets[0] = msg.sender;
         require(
             SMT.verifyByMode(_proofs, targets, root, smtMode),
-            "hunter hasn't found the treasure"
+            "hunter hasn't found the treasure chest"
         );
-        haveTreasure[msg.sender] = true;
+        haveTreasureChest[msg.sender] = true;
         smtMode = SMT.Mode.BlackList;
-        emit PickupTreasure(msg.sender);
+        emit PickupTreasureChest(msg.sender);
     }
 
-    function openTreasure() public {
-        require(haveKey[msg.sender] && haveTreasure[msg.sender]);
+    function openTreasureChest() public {
+        require(haveKey[msg.sender] && haveTreasureChest[msg.sender]);
         solved = true;
-        emit OpenTreasure(msg.sender);
+        emit OpenTreasureChest(msg.sender);
     }
 
     function isSolved() public view returns (bool) {
