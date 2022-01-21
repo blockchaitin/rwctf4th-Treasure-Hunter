@@ -9,6 +9,7 @@ services:
     volumes:
       - ./contracts:/home/ctf/contracts
       - ./challenge.yml:/home/ctf/challenge.yml
+    restart: always
 
   geth:
     build: geth
