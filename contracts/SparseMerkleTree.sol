@@ -31,15 +31,13 @@ library SMT {
         }
     }
 
-    function merge(bytes32 l, bytes32 r,uint256 h) internal pure returns (bytes32) {
-        if(l == 0 && r == 0){
-            return 0;
-        } else if (l == 0) {
-            return keccak256(abi.encode(r, h));
+    function merge(bytes32 l, bytes32 r) internal pure returns (bytes32) {
+        if (l == 0) {
+            return r;
         } else if (r == 0) {
-            return keccak256(abi.encode(l, h));
+            return l;
         } else {
-            return keccak256(abi.encode(l, r, h));
+            return keccak256(abi.encode(l, r));
         }
     }
 
@@ -61,7 +59,7 @@ library SMT {
         Leaf[] memory _leaves,
         bytes32 _expectedRoot
     ) internal pure returns (bool) {
-        return (calcRoot(_proofs, _leaves) == _expectedRoot);
+        return (calcRoot(_proofs, _leaves,_expectedRoot) == _expectedRoot);
     }
 
     function updateSingleTarget(
@@ -84,7 +82,7 @@ library SMT {
         bytes32 _prevRoot
     ) internal pure returns (bytes32) {
         require(verify(_proofs, _prevLeaves, _prevRoot), "update proof not valid");
-        return calcRoot(_proofs, _nextLeaves);
+        return calcRoot(_proofs, _nextLeaves,_prevRoot);
     }
 
     function checkGroupSorted(Leaf[] memory _leaves) internal pure returns (bool) {
@@ -114,7 +112,7 @@ library SMT {
         return ((key >> height) << height);
     }
 
-    function calcRoot(bytes32[] memory _proofs, Leaf[] memory _leaves)
+    function calcRoot(bytes32[] memory _proofs, Leaf[] memory _leaves,bytes32 _root)
         internal
         pure
         returns (bytes32)
@@ -142,10 +140,11 @@ library SMT {
 
                 uint256 height = uint256(_proofs[proofIndex++]);
                 bytes32 currentProof = _proofs[proofIndex++];
+                require(currentProof != _root);
                 if (getBit(stackKeys[stackTop - 1], height) == 1) {
-                    stackValues[stackTop - 1] = merge(currentProof, stackValues[stackTop - 1],height);
+                    stackValues[stackTop - 1] = merge(currentProof, stackValues[stackTop - 1]);
                 } else {
-                    stackValues[stackTop - 1] = merge(stackValues[stackTop - 1], currentProof,height);
+                    stackValues[stackTop - 1] = merge(stackValues[stackTop - 1], currentProof);
                 }
                 stackKeys[stackTop - 1] = parentPath(stackKeys[stackTop - 1], height);
             } else if (uint256(_proofs[proofIndex]) == 0x48) {
@@ -162,14 +161,12 @@ library SMT {
                 if (aSet == 1) {
                     stackValues[stackTop - 2] = merge(
                         stackValues[stackTop - 1],
-                        stackValues[stackTop - 2],
-                        height
+                        stackValues[stackTop - 2]
                     );
                 } else {
                     stackValues[stackTop - 2] = merge(
                         stackValues[stackTop - 2],
-                        stackValues[stackTop - 1],
-                        height
+                        stackValues[stackTop - 1]
                     );
                 }
                 stackTop -= 1;
