@@ -1,6 +1,9 @@
 contract: TreasureHunter
 
 description: |
-  Welcome!
+  There is a key and a treasure chest in Trap Room, whether you touch the treasure chest or the key you will be trapped, so how do you get the treasure?
+  It's treasure hunter show time!
 
-flag: flag{placeholder}
+  Powered by https://github.com/chainflag/eth-challenge-base
+
+flag: rwctf{th3r3_1$_nothing_1n_7h3_7r3a5ure_chest_f7h9fupa9xabbq7a}
