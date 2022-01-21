@@ -31,13 +31,13 @@ library SMT {
         }
     }
 
-    function merge(bytes32 l, bytes32 r) internal pure returns (bytes32) {
+    function merge(bytes32 l, bytes32 r,uint256 h) internal pure returns (bytes32) {
         if (l == 0) {
-            return r;
+            return keccak256(abi.encode(r, h));
         } else if (r == 0) {
-            return l;
+            return keccak256(abi.encode(l, h));
         } else {
-            return keccak256(abi.encode(l, r));
+            return keccak256(abi.encode(l, r, h));
         }
     }
 
@@ -141,9 +141,9 @@ library SMT {
                 uint256 height = uint256(_proofs[proofIndex++]);
                 bytes32 currentProof = _proofs[proofIndex++];
                 if (getBit(stackKeys[stackTop - 1], height) == 1) {
-                    stackValues[stackTop - 1] = merge(currentProof, stackValues[stackTop - 1]);
+                    stackValues[stackTop - 1] = merge(currentProof, stackValues[stackTop - 1],height);
                 } else {
-                    stackValues[stackTop - 1] = merge(stackValues[stackTop - 1], currentProof);
+                    stackValues[stackTop - 1] = merge(stackValues[stackTop - 1], currentProof,height);
                 }
                 stackKeys[stackTop - 1] = parentPath(stackKeys[stackTop - 1], height);
             } else if (uint256(_proofs[proofIndex]) == 0x48) {
@@ -160,12 +160,14 @@ library SMT {
                 if (aSet == 1) {
                     stackValues[stackTop - 2] = merge(
                         stackValues[stackTop - 1],
-                        stackValues[stackTop - 2]
+                        stackValues[stackTop - 2],
+                        height
                     );
                 } else {
                     stackValues[stackTop - 2] = merge(
                         stackValues[stackTop - 2],
-                        stackValues[stackTop - 1]
+                        stackValues[stackTop - 1],
+                        height
                     );
                 }
                 stackTop -= 1;
