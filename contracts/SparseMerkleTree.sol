@@ -32,7 +32,9 @@ library SMT {
     }
 
     function merge(bytes32 l, bytes32 r,uint256 h) internal pure returns (bytes32) {
-        if (l == 0) {
+        if(l == 0 && r == 0){
+            return 0;
+        } else if (l == 0) {
             return keccak256(abi.encode(r, h));
         } else if (r == 0) {
             return keccak256(abi.encode(l, h));
